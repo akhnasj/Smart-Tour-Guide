@@ -3,42 +3,23 @@ import 'login.dart';
 import 'register.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(MyTravelApp());
 }
 
-class MyApp extends StatelessWidget {
+class MyTravelApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Smart Tour Guide',
+      title: 'Travel App',
       theme: ThemeData(
-        primarySwatch: Colors.teal,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+        primaryColor: Colors.teal,
+        visualDensity: VisualDensity.adaptivePlatformDensity, colorScheme: ColorScheme.fromSwatch().copyWith(secondary: Colors.orange),
       ),
-      initialRoute: '/login',
+      home: LoginPage(),
       routes: {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
-        '/home': (context) => HomePage(),
       },
-    );
-  }
-}
-
-class HomePage extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Home'),
-      ),
-      body: Center(
-        child: Text(
-          'Welcome to the Smart Tour Guide App!',
-          style: TextStyle(fontSize: 24, color: Colors.teal),
-          textAlign: TextAlign.center,
-        ),
-      ),
     );
   }
 }

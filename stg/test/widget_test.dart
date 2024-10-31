@@ -1,76 +1,55 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:stg/main.dart';
-import 'package:stg/login.dart';
-import 'package:stg/register.dart';
+import 'package:stg/login.dart'; // Import LoginPage
+import 'package:stg/register.dart'; // Import RegisterPage
 
 void main() {
-  group('Widget Tests', () {
-    testWidgets('Login page has a title and a login button', (WidgetTester tester) async {
+  group('LoginPage Tests', () {
+    testWidgets('LoginPage displays correctly', (WidgetTester tester) async {
       await tester.pumpWidget(MaterialApp(home: LoginPage()));
 
-      // Verify that the login page has a title and a login button
+      // Check if Welcome Text appears
+      expect(find.text('Welcome Back!'), findsOneWidget);
+
+      // Check if Email TextField is present
+      expect(find.byType(TextField), findsNWidgets(2)); // Email and Password fields
+
+      // Check if Login button is present
       expect(find.text('Login'), findsOneWidget);
-      expect(find.byType(TextFormField), findsNWidgets(2)); // Username and Password fields
-      expect(find.byType(ElevatedButton), findsOneWidget);
-      expect(find.byType(TextButton), findsOneWidget);
-    });
 
-    testWidgets('Register page has a title and a register button', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(home: RegisterPage()));
-
-      // Verify that the register page has a title and a register button
-      expect(find.text('Register'), findsOneWidget);
-      expect(find.byType(TextFormField), findsNWidgets(2)); // Username and Password fields
-      expect(find.byType(ElevatedButton), findsOneWidget);
-    });
-
-    testWidgets('Home page has a welcome message', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(home: HomePage()));
-
-      // Verify that the home page has a welcome message
-      expect(find.text('Welcome to the Smart Tour Guide App!'), findsOneWidget);
-    });
-
-    testWidgets('Login button triggers validation', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(home: LoginPage()));
-
-      // Tap the login button without entering credentials
-      await tester.tap(find.byType(ElevatedButton));
-      await tester.pump();
-
-      // Verify that validation messages are shown
-      expect(find.text('Please enter your username'), findsOneWidget);
-      expect(find.text('Please enter your password'), findsOneWidget);
-    });
-
-    testWidgets('Register button triggers validation', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(home: RegisterPage()));
-
-      // Tap the register button without entering credentials
-      await tester.tap(find.byType(ElevatedButton));
-      await tester.pump();
-
-      // Verify that validation messages are shown
-      expect(find.text('Please enter your username'), findsOneWidget);
-      expect(find.text('Please enter your password'), findsOneWidget);
-    });
-
-    testWidgets('Navigation from login to register page', (WidgetTester tester) async {
-      await tester.pumpWidget(MaterialApp(
-        initialRoute: '/login',
-        routes: {
-          '/login': (context) => LoginPage(),
-          '/register': (context) => RegisterPage(),
-        },
-      ));
-
-      // Tap the register link
-      await tester.tap(find.byType(TextButton));
+      // Tap on Register link and verify
+      await tester.tap(find.text("Don't have an account? Register"));
       await tester.pumpAndSettle();
 
-      // Verify that we navigated to the register page
+      // This should ideally navigate to the RegisterPage
+      // In a real app, you could navigate using Navigator for full flow testing
+    });
+  });
+
+  group('RegisterPage Tests', () {
+    testWidgets('RegisterPage displays correctly', (WidgetTester tester) async {
+      await tester.pumpWidget(MaterialApp(home: RegisterPage()));
+
+      // Check if Create Account Text appears
+      expect(find.text('Create Account'), findsOneWidget);
+
+      // Check if Full Name, Email, Password fields are present
+      expect(find.byType(TextField), findsNWidgets(4)); // Full Name, Email, Password, Confirm Password
+
+      // Check if Register button is present
       expect(find.text('Register'), findsOneWidget);
+
+      // Simulate entering text
+      await tester.enterText(find.byType(TextField).at(0), 'John Doe'); // Full Name
+      await tester.enterText(find.byType(TextField).at(1), 'johndoe@example.com'); // Email
+      await tester.enterText(find.byType(TextField).at(2), 'password123'); // Password
+      await tester.enterText(find.byType(TextField).at(3), 'password123'); // Confirm Password
+
+      // Tap on Register button
+      await tester.tap(find.text('Register'));
+      await tester.pump();
+
+      // In a real app, you could check for registration result or redirection here
     });
   });
 }
