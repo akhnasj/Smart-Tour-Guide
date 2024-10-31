@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'login.dart';  // Import the login page
-import 'register.dart';  // Import the register page
+import 'login.dart';
+import 'register.dart';
 
 void main() {
   runApp(MyApp());
@@ -10,9 +10,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Smart Tour Guide App',
+      title: 'Smart Tour Guide',
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        primarySwatch: Colors.teal,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       initialRoute: '/login',
       routes: {
@@ -29,10 +30,14 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Home Page'),
+        title: Text('Home'),
       ),
       body: Center(
-        child: Text('Welcome to the Smart Tour Guide App!'),
+        child: Text(
+          'Welcome to the Smart Tour Guide App!',
+          style: TextStyle(fontSize: 24, color: Colors.teal),
+          textAlign: TextAlign.center,
+        ),
       ),
     );
   }
