@@ -16,3 +16,16 @@ subprojects {
 tasks.register("clean", Delete) {
     delete rootProject.buildDir
 }
+
+buildscript {
+    repositories {
+        google()  // Make sure this is present
+        mavenCentral()  // Optional, for other dependencies
+    }
+    ext.kotlin_version = '1.8.0' 
+    dependencies {
+        classpath 'com.android.tools.build:gradle:7.4.2'  // Use the latest version if available
+        classpath 'com.google.gms:google-services:4.4.2'  // Use the latest version of google-services
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
