@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'login.dart';
 import 'register.dart';
-import 'admin_page.dart'; // Adjust the path as necessary
-
-
+import 'admin_page.dart';
+import 'home_page.dart';
 
 void main() async {
-  WidgetsFlutterBinding.ensureInitialized(); // Ensures Flutter is ready before initializing Firebase
+  WidgetsFlutterBinding
+      .ensureInitialized(); // Ensures Flutter is ready before initializing Firebase
   await Firebase.initializeApp(); // Initializes Firebase
   runApp(MyTravelApp());
 }
@@ -29,6 +29,7 @@ class MyTravelApp extends StatelessWidget {
         '/login': (context) => LoginPage(),
         '/register': (context) => RegisterPage(),
         '/admin': (context) => AdminPage(), // Add this route
+        'home_page': (context) => HomePage(),
       },
     );
   }
