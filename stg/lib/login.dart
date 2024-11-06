@@ -10,48 +10,48 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>(); // GlobalKey for form validation
+  bool _obscurePassword = true; // Boolean to toggle password visibility
 
-Future<void> _loginUser() async {
-  // Validate the form fields
-  if (!_formKey.currentState!.validate()) {
-    return; // If the form is not valid, exit the method
+  Future<void> _loginUser() async {
+    // Validate the form fields
+    if (!_formKey.currentState!.validate()) {
+      return; // If the form is not valid, exit the method
+    }
+
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+
+    try {
+      // Special admin login
+      if (email == "akhna@gmail.com" && password == "akhnasj") {
+        // Navigate to Admin Page
+        Navigator.pushNamed(context, '/admin');
+        _clearFields(); // Clear fields after navigation
+      } else {
+        // Regular tourist login
+        await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        Navigator.pushNamed(context, 'home_page');
+        _clearFields(); // Clear fields after navigation
+      }
+    } on FirebaseAuthException catch (e) {
+      // Handling specific FirebaseAuth errors
+      if (e.code == 'user-not-found') {
+        _showError("No user found with this email.");
+      } else if (e.code == 'wrong-password') {
+        _showError("Incorrect password. Please try again.");
+      } else {
+        _showError("Login failed: ${e.message}");
+      }
+    }
   }
 
-  final email = _emailController.text.trim();
-  final password = _passwordController.text.trim();
-
-  try {
-    // Special admin login
-    if (email == "akhna@gmail.com" && password == "akhnasj") {
-      // Navigate to Admin Page
-      Navigator.pushNamed(context, '/admin');
-      _clearFields(); // Clear fields after navigation
-    } else {
-      // Regular tourist login
-      await FirebaseAuth.instance.signInWithEmailAndPassword(
-        email: email,
-        password: password,
-      );
-      Navigator.pushNamed(context, 'home_page');
-      _clearFields(); // Clear fields after navigation
-    }
-  } on FirebaseAuthException catch (e) {
-    // Handling specific FirebaseAuth errors
-    if (e.code == 'user-not-found') {
-      _showError("No user found with this email.");
-    } else if (e.code == 'wrong-password') {
-      _showError("Incorrect password. Please try again.");
-    } else {
-      _showError("Login failed: ${e.message}");
-    }
+  void _clearFields() {
+    _emailController.clear();
+    _passwordController.clear();
   }
-}
-
-void _clearFields() {
-  _emailController.clear();
-  _passwordController.clear();
-}
-
 
   void _showError(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -76,7 +76,10 @@ void _clearFields() {
                   SizedBox(height: 20),
                   Text(
                     'Welcome Back!',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.teal),
+                    style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal),
                   ),
                   SizedBox(height: 10),
                   Text(
@@ -103,15 +106,28 @@ void _clearFields() {
                   ),
                   SizedBox(height: 15),
 
-                  // Password TextField
+                  // Password TextField with Eye Icon
                   TextFormField(
                     controller: _passwordController,
                     decoration: InputDecoration(
                       labelText: 'Password',
                       prefixIcon: Icon(Icons.lock),
+                      suffixIcon: IconButton(
+                        icon: Icon(
+                          _obscurePassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
+                          color: Colors.teal,
+                        ),
+                        onPressed: () {
+                          setState(() {
+                            _obscurePassword = !_obscurePassword;
+                          });
+                        },
+                      ),
                       border: OutlineInputBorder(),
                     ),
-                    obscureText: true,
+                    obscureText: _obscurePassword,
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return 'Password field is required.'; // Error message
@@ -123,17 +139,23 @@ void _clearFields() {
 
                   // Login Button
                   ElevatedButton(
-                    onPressed: _loginUser,
+                    onPressed: () async {
+                      await _loginUser(); // Calls your _loginUser method
+                    },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.teal,
-                      padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 50, vertical: 15),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                       ),
                     ),
                     child: Text(
                       'Login',
-                      style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold),
                     ),
                   ),
                   SizedBox(height: 20),
@@ -143,7 +165,10 @@ void _clearFields() {
                     onPressed: () => Navigator.pushNamed(context, '/register'),
                     child: Text(
                       'Don\'t have an account? Create one now!',
-                      style: TextStyle(fontSize: 16, color: Colors.teal[700], fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.teal[700],
+                          fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
