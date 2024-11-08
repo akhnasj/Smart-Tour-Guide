@@ -1,10 +1,10 @@
-// categories.dart
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'locations.dart'; // Import LocationsPage to navigate to it
 
 class CategoriesPage extends StatelessWidget {
   final String stateName;
+
   CategoriesPage({required this.stateName});
 
   @override
@@ -26,6 +26,7 @@ class CategoriesPage extends StatelessWidget {
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return Center(child: Text('No categories found for this state.'));
           }
+
           // Extract unique categories from documents
           List<String> categories = snapshot.data!.docs
               .map((doc) => doc['Category'] as String)
@@ -43,19 +44,33 @@ class CategoriesPage extends StatelessWidget {
             ),
             itemBuilder: (context, index) {
               String category = categories[index];
-              return Card(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(15),
-                ),
-                color: Colors.teal[100 * ((index % 5) + 1)],
-                child: Center(
-                  child: Text(
-                    category,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal[900],
+              return GestureDetector(
+                onTap: () {
+                  // Navigate to LocationsPage with selected category and state
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => LocationsPage(
+                        stateName: stateName,
+                        categoryName: category,
+                      ),
+                    ),
+                  );
+                },
+                child: Card(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(15),
+                  ),
+                  color: Colors.teal[100 * ((index % 5) + 1)],
+                  child: Center(
+                    child: Text(
+                      category,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal[900],
+                      ),
                     ),
                   ),
                 ),
