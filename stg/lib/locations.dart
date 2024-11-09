@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class LocationsPage extends StatelessWidget {
   final String stateName;
@@ -8,7 +9,6 @@ class LocationsPage extends StatelessWidget {
   LocationsPage({required this.stateName, required this.categoryName});
 
   Future<double?> getAverageRating(String locationId) async {
-    // Fetch all reviews for the given location and calculate the average rating
     try {
       QuerySnapshot reviewsSnapshot = await FirebaseFirestore.instance
           .collection('reviews')
@@ -50,7 +50,6 @@ class LocationsPage extends StatelessWidget {
             return Center(child: Text('No locations found in this category.'));
           }
 
-          // Retrieve locations
           List<DocumentSnapshot> locations = snapshot.data!.docs;
 
           return ListView.builder(
@@ -65,6 +64,13 @@ class LocationsPage extends StatelessWidget {
               String type = location['Type'] ?? 'Unknown Type';
               String locationId = location['l_id'];
 
+              // Casting location data to Map<String, dynamic> for containsKey check
+              Map<String, dynamic> locationData =
+                  location.data() as Map<String, dynamic>;
+              String? imageUrl = locationData.containsKey('Image_URL')
+                  ? locationData['Image_URL']
+                  : null;
+
               return FutureBuilder<double?>(
                 future: getAverageRating(locationId),
                 builder: (context, ratingSnapshot) {
@@ -76,46 +82,152 @@ class LocationsPage extends StatelessWidget {
                       borderRadius: BorderRadius.circular(15),
                     ),
                     elevation: 3,
-                    child: ListTile(
-                      contentPadding: EdgeInsets.all(16.0),
-                      title: Text(
-                        locationName,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.teal[900],
-                        ),
-                      ),
-                      subtitle: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          SizedBox(height: 8),
-                          Text(
-                            'City: $city',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Type: $type',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          SizedBox(height: 4),
-                          Text(
-                            'Best Time to Visit: $bestTimeToVisit',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                          if (rating != null) SizedBox(height: 4),
-                          if (rating != null)
-                            Text(
-                              'Rating: ${rating.toStringAsFixed(1)} / 5.0',
-                              style: TextStyle(fontSize: 16),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (imageUrl != null)
+                          ClipRRect(
+                            borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(15),
                             ),
-                        ],
-                      ),
-                      trailing: Icon(Icons.location_on, color: Colors.teal),
-                      onTap: () {
-                        // Navigate to a detailed location page if needed
-                      },
+                            child: Image.network(
+                              imageUrl,
+                              height: 200,
+                              fit: BoxFit.cover,
+                              errorBuilder: (context, error, stackTrace) {
+                                return Container(
+                                  height: 200,
+                                  color: Colors.grey[300],
+                                  child: Center(
+                                    child: Text(
+                                      'Image not available',
+                                      style: TextStyle(color: Colors.grey),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              // Location Name in large, bold font
+                              Text(
+                                locationName,
+                                style: TextStyle(
+                                  fontSize: 24,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.teal[800],
+                                ),
+                              ),
+                              SizedBox(height: 12),
+                              // Row for city, type, best time to visit, and rating
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  // Left Column: City and Type
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'City:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.teal[800],
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        city,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      Text(
+                                        'Type:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.teal[800],
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        type,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  // Right Column: Best Time to Visit and Rating
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Best Time to Visit:',
+                                        style: TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 16,
+                                          color: Colors.teal[800],
+                                        ),
+                                      ),
+                                      SizedBox(height: 4),
+                                      Text(
+                                        bestTimeToVisit,
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          color: Colors.black54,
+                                        ),
+                                      ),
+                                      SizedBox(height: 12),
+                                      if (rating != null)
+                                        Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            // Rating as stars
+                                            RatingBar.builder(
+                                              initialRating: rating,
+                                              minRating: 1,
+                                              itemSize: 24,
+                                              direction: Axis.horizontal,
+                                              allowHalfRating: true,
+                                              itemCount: 5,
+                                              itemBuilder: (context, _) => Icon(
+                                                Icons.star,
+                                                color: Colors.amber,
+                                              ),
+                                              onRatingUpdate: (rating) {},
+                                            ),
+                                            SizedBox(height: 4),
+                                            // Rating text
+                                            Text(
+                                              '${rating.toStringAsFixed(1)} / 5.0',
+                                              style: TextStyle(
+                                                fontSize: 16,
+                                                color: Colors.teal,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
                   );
                 },
