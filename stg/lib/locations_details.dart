@@ -7,6 +7,7 @@ class LocationsDetailsPage extends StatelessWidget {
 
   LocationsDetailsPage({required this.locationId});
 
+  // Fetch location details
   Future<Map<String, dynamic>?> getLocationDetails() async {
     try {
       DocumentSnapshot locationSnapshot = await FirebaseFirestore.instance
@@ -24,6 +25,7 @@ class LocationsDetailsPage extends StatelessWidget {
     }
   }
 
+  // Fetch reviews for the location
   Future<List<DocumentSnapshot>> getReviews() async {
     try {
       QuerySnapshot reviewsSnapshot = await FirebaseFirestore.instance
@@ -38,6 +40,7 @@ class LocationsDetailsPage extends StatelessWidget {
     }
   }
 
+  // Fetch average rating of the location
   Future<double?> getAverageRating() async {
     try {
       QuerySnapshot reviewsSnapshot = await FirebaseFirestore.instance
@@ -59,6 +62,7 @@ class LocationsDetailsPage extends StatelessWidget {
     }
   }
 
+  // Fetch full name of the tourist using t_id
   Future<String> getTouristName(String touristId) async {
     try {
       DocumentSnapshot touristSnapshot = await FirebaseFirestore.instance
@@ -71,9 +75,9 @@ class LocationsDetailsPage extends StatelessWidget {
             touristSnapshot.data() as Map<String, dynamic>;
         String firstName = touristData['firstName'] ?? 'Unknown';
         String lastName = touristData['lastName'] ?? 'Unknown';
-        return '$firstName $lastName';
+        return '$firstName $lastName'; // Return the full name
       }
-      return 'Unknown';
+      return 'Unknown'; // If tourist not found, return unknown
     } catch (e) {
       print("Error fetching tourist name: $e");
       return 'Unknown';
@@ -88,6 +92,7 @@ class LocationsDetailsPage extends StatelessWidget {
         backgroundColor: Colors.teal,
       ),
       body: FutureBuilder<Map<String, dynamic>?>(
+        // Fetch location details
         future: getLocationDetails(),
         builder: (context, locationSnapshot) {
           if (locationSnapshot.connectionState == ConnectionState.waiting) {
@@ -107,6 +112,7 @@ class LocationsDetailsPage extends StatelessWidget {
           String locationId = location['l_id'];
 
           return FutureBuilder<double?>(
+            // Fetch average rating
             future: getAverageRating(),
             builder: (context, ratingSnapshot) {
               double? rating = ratingSnapshot.data;
@@ -164,7 +170,7 @@ class LocationsDetailsPage extends StatelessWidget {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          // Rating as stars (placed above the favorites button)
+                          // Rating as stars
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -235,12 +241,11 @@ class LocationsDetailsPage extends StatelessWidget {
                                 if (touristSnapshot.connectionState ==
                                     ConnectionState.waiting) {
                                   return SizedBox
-                                      .shrink(); // Wait until the data is fetched
+                                      .shrink(); // Wait until data is fetched
                                 }
 
                                 if (touristSnapshot.hasData) {
-                                  String reviewerName = touristSnapshot
-                                      .data!; // Get the full name of the tourist
+                                  String reviewerName = touristSnapshot.data!;
 
                                   return Card(
                                     margin: EdgeInsets.only(bottom: 16.0),
@@ -255,7 +260,7 @@ class LocationsDetailsPage extends StatelessWidget {
                                             CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            reviewerName, // Display only the tourist's full name
+                                            reviewerName, // Display full name
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               color: Colors.teal[800],
