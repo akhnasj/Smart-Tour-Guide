@@ -1,18 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class LocationsDetailsPage extends StatelessWidget {
+class LocationsDetailsPage extends StatefulWidget {
   final String locationId;
 
   LocationsDetailsPage({required this.locationId});
+
+  @override
+  _LocationsDetailsPageState createState() => _LocationsDetailsPageState();
+}
+
+class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
+  bool isFavorite = false;
+
+  @override
+  void initState() {
+    super.initState();
+    checkIfFavorite();
+  }
 
   // Fetch location details
   Future<Map<String, dynamic>?> getLocationDetails() async {
     try {
       DocumentSnapshot locationSnapshot = await FirebaseFirestore.instance
           .collection('locations')
-          .doc(locationId)
+          .doc(widget.locationId)
           .get();
 
       if (locationSnapshot.exists) {
@@ -30,7 +44,7 @@ class LocationsDetailsPage extends StatelessWidget {
     try {
       QuerySnapshot reviewsSnapshot = await FirebaseFirestore.instance
           .collection('reviews')
-          .where('l_id', isEqualTo: locationId)
+          .where('l_id', isEqualTo: widget.locationId)
           .get();
 
       return reviewsSnapshot.docs;
@@ -45,7 +59,7 @@ class LocationsDetailsPage extends StatelessWidget {
     try {
       QuerySnapshot reviewsSnapshot = await FirebaseFirestore.instance
           .collection('reviews')
-          .where('l_id', isEqualTo: locationId)
+          .where('l_id', isEqualTo: widget.locationId)
           .get();
 
       if (reviewsSnapshot.docs.isEmpty) return null;
@@ -84,6 +98,67 @@ class LocationsDetailsPage extends StatelessWidget {
     }
   }
 
+  // Check if the location is already marked as favorite for the logged-in user
+  Future<void> checkIfFavorite() async {
+    String? touristId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (touristId != null) {
+      try {
+        QuerySnapshot favouriteSnapshot = await FirebaseFirestore.instance
+            .collection('favourites')
+            .where('t_id', isEqualTo: touristId)
+            .where('l_id', isEqualTo: widget.locationId)
+            .get();
+
+        setState(() {
+          isFavorite = favouriteSnapshot.docs.isNotEmpty;
+        });
+      } catch (e) {
+        print("Error checking favorite status: $e");
+      }
+    }
+  }
+
+  // Toggle favorite status and save to Firestore
+  Future<void> toggleFavorite() async {
+    String? touristId = FirebaseAuth.instance.currentUser?.uid;
+
+    if (touristId != null) {
+      try {
+        if (isFavorite) {
+          // Remove from favorites
+          QuerySnapshot favouriteSnapshot = await FirebaseFirestore.instance
+              .collection('favourites')
+              .where('t_id', isEqualTo: touristId)
+              .where('l_id', isEqualTo: widget.locationId)
+              .get();
+
+          for (var doc in favouriteSnapshot.docs) {
+            await doc.reference.delete();
+          }
+        } else {
+          // Add to favorites
+          DocumentReference favouriteRef = FirebaseFirestore.instance
+              .collection('favourites')
+              .doc(); // Create a new document ID
+
+          await favouriteRef.set({
+            't_id': touristId,
+            'l_id': widget.locationId,
+            'f_id': favouriteRef.id, // Use document ID as unique f_id
+          });
+        }
+
+        // After toggle, update the favorite status
+        setState(() {
+          isFavorite = !isFavorite;
+        });
+      } catch (e) {
+        print("Error toggling favorite: $e");
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -104,12 +179,10 @@ class LocationsDetailsPage extends StatelessWidget {
           }
 
           Map<String, dynamic> location = locationSnapshot.data!;
-
           String locationName = location['Location'];
           String city = location['City'] ?? 'Unknown City';
           String type = location['Type'] ?? 'Unknown Type';
           String? imageUrl = location['Image_URL'];
-          String locationId = location['l_id'];
 
           return FutureBuilder<double?>(
             // Fetch average rating
@@ -166,10 +239,13 @@ class LocationsDetailsPage extends StatelessWidget {
                       style: TextStyle(fontSize: 18, color: Colors.black54),
                     ),
                     SizedBox(height: 16),
-                    if (rating != null)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
+                    // Rating or Favorite Button
+                    Row(
+                      mainAxisAlignment: rating == null
+                          ? MainAxisAlignment.end
+                          : MainAxisAlignment.spaceBetween,
+                      children: [
+                        if (rating != null) ...[
                           // Rating as stars
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,7 +253,7 @@ class LocationsDetailsPage extends StatelessWidget {
                               RatingBar.builder(
                                 initialRating: rating,
                                 minRating: 1,
-                                itemSize: 24,
+                                itemSize: 20, // Reduced size of stars
                                 direction: Axis.horizontal,
                                 allowHalfRating: true,
                                 itemCount: 5,
@@ -195,22 +271,27 @@ class LocationsDetailsPage extends StatelessWidget {
                               ),
                             ],
                           ),
-                          // Heart icon for favorites
-                          IconButton(
-                            onPressed: () {
-                              // Add functionality to mark as favorite
-                              print('Location added to favorites');
-                            },
-                            icon: Icon(
-                              Icons.favorite_border,
-                              color: Colors.red,
-                              size: 32,
-                            ),
-                          ),
                         ],
-                      ),
+                        // Heart icon for favorites (always visible)
+                        IconButton(
+                          onPressed: toggleFavorite,
+                          icon: Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Colors.red : Colors.grey,
+                          ),
+                        ),
+                      ],
+                    ),
                     SizedBox(height: 16),
-                    // Reviews
+                    Text(
+                      'Reviews:',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal,
+                      ),
+                    ),
+                    // Display reviews
                     FutureBuilder<List<DocumentSnapshot>>(
                       future: getReviews(),
                       builder: (context, reviewsSnapshot) {
@@ -219,82 +300,79 @@ class LocationsDetailsPage extends StatelessWidget {
                           return Center(child: CircularProgressIndicator());
                         }
 
-                        if (reviewsSnapshot.data == null ||
+                        if (!reviewsSnapshot.hasData ||
                             reviewsSnapshot.data!.isEmpty) {
                           return Center(child: Text("No reviews yet"));
                         }
 
                         List<DocumentSnapshot> reviews = reviewsSnapshot.data!;
-
-                        return Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: reviews.map((reviewDoc) {
+                        return // Inside the ListView.builder that displays reviews
+                            ListView.builder(
+                          shrinkWrap: true,
+                          itemCount: reviews.length,
+                          itemBuilder: (context, index) {
+                            var review = reviews[index];
+                            String touristId = review['t_id'];
+                            String rating = review['Rating'];
                             String reviewText =
-                                reviewDoc['Review'] ?? 'No review';
-                            String reviewerId = reviewDoc['t_id'];
-                            double reviewRating =
-                                double.parse(reviewDoc['Rating']);
+                                review['Review'] ?? 'No comment';
 
                             return FutureBuilder<String>(
-                              future: getTouristName(reviewerId),
-                              builder: (context, touristSnapshot) {
-                                if (touristSnapshot.connectionState ==
+                              future: getTouristName(touristId),
+                              builder: (context, touristNameSnapshot) {
+                                if (touristNameSnapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return SizedBox
-                                      .shrink(); // Wait until data is fetched
+                                  return SizedBox();
                                 }
 
-                                if (touristSnapshot.hasData) {
-                                  String reviewerName = touristSnapshot.data!;
+                                String touristName = touristNameSnapshot.data!;
 
-                                  return Card(
-                                    margin: EdgeInsets.only(bottom: 16.0),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    elevation: 3,
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            reviewerName, // Display full name
-                                            style: TextStyle(
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.teal[800],
-                                            ),
+                                return Card(
+                                  margin: EdgeInsets.symmetric(vertical: 8.0),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(8.0),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        // Tourist name
+                                        Text(
+                                          touristName,
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
                                           ),
-                                          SizedBox(height: 8),
-                                          Text(
-                                            reviewText,
-                                            style: TextStyle(fontSize: 16),
-                                          ),
-                                          SizedBox(height: 8),
-                                          RatingBar.builder(
-                                            initialRating: reviewRating,
-                                            minRating: 1,
-                                            itemSize: 20,
-                                            direction: Axis.horizontal,
-                                            allowHalfRating: true,
-                                            itemCount: 5,
-                                            itemBuilder: (context, _) => Icon(
-                                              Icons.star,
-                                              color: Colors.amber,
-                                            ),
-                                            onRatingUpdate: (rating) {},
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                }
+                                        ),
+                                        SizedBox(height: 4),
 
-                                return SizedBox.shrink(); // In case of no data
+                                        // Rating as stars
+                                        RatingBar.builder(
+                                          initialRating: double.parse(rating),
+                                          minRating: 1,
+                                          itemSize: 15, // Small size for stars
+                                          direction: Axis.horizontal,
+                                          allowHalfRating: true,
+                                          itemCount: 5,
+                                          itemBuilder: (context, _) => Icon(
+                                            Icons.star,
+                                            color: Colors.amber,
+                                          ),
+                                          onRatingUpdate: (rating) {},
+                                        ),
+                                        SizedBox(height: 8),
+
+                                        // Review text
+                                        Text(
+                                          reviewText,
+                                          style: TextStyle(fontSize: 14),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                );
                               },
                             );
-                          }).toList(),
+                          },
                         );
                       },
                     ),
