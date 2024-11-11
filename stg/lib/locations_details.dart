@@ -4,6 +4,7 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'add_reviews.dart'; // Ensure you import the RatingsReviewsPage
 import 'descriptions.dart'; // Import the Descriptions page
+import 'weather.dart'; // Import the Weather page
 
 class LocationsDetailsPage extends StatefulWidget {
   final String locationId;
@@ -286,39 +287,50 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                     ),
                     SizedBox(height: 16),
                     // Description Button
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => DescriptionsPage(
-                              locationId: widget.locationId,
-                            ),
+                    Row(
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => DescriptionsPage(
+                                  locationId: widget.locationId,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text("View Description"),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.teal,
+                            backgroundColor: Colors.white,
+                            side: BorderSide(color: Colors.teal, width: 2),
                           ),
-                        );
-                      },
-                      child: Text("View Description"),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.teal,
-                        backgroundColor: Colors.white,
-                        side: BorderSide(
-                          color: Colors.teal,
-                          width: 2,
                         ),
-                      ),
+                        SizedBox(width: 16),
+                        // Weather Button
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => WeatherPage(
+                                  city: city,
+                                ),
+                              ),
+                            );
+                          },
+                          child: Text("View Weather"),
+                          style: ElevatedButton.styleFrom(
+                            foregroundColor: Colors.teal,
+                            backgroundColor: Colors.white,
+                            side: BorderSide(color: Colors.teal, width: 2),
+                          ),
+                        ),
+                      ],
                     ),
                     SizedBox(height: 16),
-                    // Reviews Section
-                    Text(
-                      'Reviews',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.teal[800],
-                      ),
-                    ),
-                    SizedBox(height: 8),
-                    // Display reviews
+                    // Reviews section
                     FutureBuilder<List<DocumentSnapshot>>(
                       future: getReviews(),
                       builder: (context, reviewSnapshot) {
@@ -329,56 +341,58 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
 
                         if (!reviewSnapshot.hasData ||
                             reviewSnapshot.data!.isEmpty) {
-                          return Center(child: Text('No reviews yet.'));
+                          return Center(child: Text("No reviews yet"));
                         }
 
+                        List<DocumentSnapshot> reviews = reviewSnapshot.data!;
+
                         return Column(
-                          children: reviewSnapshot.data!.map((reviewDoc) {
-                            String reviewText = reviewDoc['Review'];
-                            double reviewRating =
-                                double.parse(reviewDoc['Rating']);
-                            String touristId = reviewDoc['t_id'];
-                            return FutureBuilder<String>(
-                              future: getTouristName(touristId),
-                              builder: (context, touristSnapshot) {
-                                if (touristSnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return CircularProgressIndicator();
-                                }
-                                String touristName =
-                                    touristSnapshot.data ?? 'Anonymous';
-                                return ListTile(
-                                  title: Text(touristName),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      RatingBar.builder(
-                                        initialRating: reviewRating,
-                                        minRating: 1,
-                                        itemSize: 20,
-                                        direction: Axis.horizontal,
-                                        allowHalfRating: true,
-                                        itemCount: 5,
-                                        itemBuilder: (context, _) => Icon(
-                                          Icons.star,
-                                          color: Colors.amber,
-                                        ),
-                                        onRatingUpdate: (rating) {},
-                                      ),
-                                      SizedBox(height: 4),
-                                      Text(reviewText),
-                                    ],
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: reviews.map((review) {
+                            return ListTile(
+                              title: FutureBuilder<String>(
+                                future: getTouristName(review['t_id']),
+                                builder: (context, touristSnapshot) {
+                                  if (touristSnapshot.connectionState ==
+                                      ConnectionState.waiting) {
+                                    return Text("Loading...");
+                                  }
+
+                                  return Text(touristSnapshot.data ??
+                                      'Unknown Tourist');
+                                },
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  RatingBar.builder(
+                                    initialRating:
+                                        double.parse(review['Rating']),
+                                    minRating: 1,
+                                    itemSize: 20,
+                                    direction: Axis.horizontal,
+                                    allowHalfRating: true,
+                                    itemCount: 5,
+                                    itemBuilder: (context, _) => Icon(
+                                      Icons.star,
+                                      color: Colors.amber,
+                                    ),
+                                    onRatingUpdate: (rating) {},
                                   ),
-                                );
-                              },
+                                  SizedBox(height: 8),
+                                  Text(
+                                    review['Review'],
+                                    style: TextStyle(fontSize: 16),
+                                  ),
+                                ],
+                              ),
                             );
                           }).toList(),
                         );
                       },
                     ),
                     SizedBox(height: 16),
-                    // Add Review Button
+                    // Add a Rating and Review Button
                     ElevatedButton(
                       onPressed: () {
                         Navigator.push(
