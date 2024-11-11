@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 
 class DescriptionsPage extends StatefulWidget {
@@ -12,44 +13,100 @@ class DescriptionsPage extends StatefulWidget {
 }
 
 class _DescriptionsPageState extends State<DescriptionsPage> {
-  late Future<String> _description;
+  late String locationName;
+  bool isLoading = true;
+  String description = '';
 
   @override
   void initState() {
     super.initState();
-    _description = fetchDescription();
+    fetchLocationDescription();
   }
 
-  Future<String> fetchDescription() async {
-    final String locationId = widget.locationId;
-
-    // Define the Wikipedia API URL
-    final url = Uri.parse('https://en.wikipedia.org/w/api.php?' +
-        'action=query&format=json&prop=extracts&exintro=&explaintext=&titles=$locationId');
-
+  // Fetch description from Wikipedia, fallback to Wikidata if Wikipedia fails
+  Future<void> fetchLocationDescription() async {
     try {
-      // Send GET request to Wikipedia API
-      final response = await http.get(url);
+      final locationSnapshot = await FirebaseFirestore.instance
+          .collection('locations')
+          .doc(widget.locationId)
+          .get();
 
-      if (response.statusCode == 200) {
-        // Parse the response body
-        final Map<String, dynamic> data = json.decode(response.body);
+      if (locationSnapshot.exists) {
+        locationName = locationSnapshot['Location'];
+        String cityName = locationSnapshot['City'];
 
-        // Extract the page ID from the response
-        final pages = data['query']['pages'];
-        final pageId = pages.keys.first;
+        // Try fetching from Wikipedia API first
+        final wikipediaResponse = await http.get(
+          Uri.parse(
+              'https://en.wikipedia.org/w/api.php?action=query&prop=extracts&exintro&explaintext&titles=$locationName&format=json'),
+        );
 
-        // Extract the description (extract)
-        final description =
-            pages[pageId]['extract'] ?? 'No description available';
+        if (wikipediaResponse.statusCode == 200) {
+          final wikipediaData = json.decode(wikipediaResponse.body);
+          final pages = wikipediaData['query']['pages'];
+          final pageId = pages.keys.first;
+          final pageDescription = pages[pageId]['extract'];
 
-        return description;
+          // Check if Wikipedia data is found
+          if (pageDescription != null && pageDescription.isNotEmpty) {
+            setState(() {
+              description = pageDescription;
+              isLoading = false;
+            });
+            return; // Exit if Wikipedia data was found
+          }
+        }
+
+        // If no Wikipedia data found, fetch from Wikidata API
+        final wikidataSearchResponse = await http.get(
+          Uri.parse(
+              'https://www.wikidata.org/w/api.php?action=wbsearchentities&search=$locationName&language=en&format=json'),
+        );
+
+        if (wikidataSearchResponse.statusCode == 200) {
+          final wikidataSearchData = json.decode(wikidataSearchResponse.body);
+
+          if (wikidataSearchData['search'].isNotEmpty) {
+            final entityId = wikidataSearchData['search'][0]['id'];
+
+            // Fetch the description using the Wikidata entity ID
+            final wikidataEntityResponse = await http.get(
+              Uri.parse(
+                  'https://www.wikidata.org/w/api.php?action=wbgetentities&ids=$entityId&props=descriptions&languages=en&format=json'),
+            );
+
+            if (wikidataEntityResponse.statusCode == 200) {
+              final entityData = json.decode(wikidataEntityResponse.body);
+              final entityDescription = entityData['entities'][entityId]
+                  ['descriptions']['en']['value'];
+
+              setState(() {
+                description = entityDescription ?? 'No description available.';
+                isLoading = false;
+              });
+            } else {
+              throw Exception('Failed to load Wikidata entity description');
+            }
+          } else {
+            setState(() {
+              description = 'No description available for this location.';
+              isLoading = false;
+            });
+          }
+        } else {
+          throw Exception('Failed to search Wikidata');
+        }
       } else {
-        throw Exception('Failed to load description');
+        setState(() {
+          description = 'Location not found in database.';
+          isLoading = false;
+        });
       }
     } catch (e) {
-      print('Error: $e');
-      return 'Failed to fetch description';
+      setState(() {
+        description = 'Error fetching description: $e';
+        isLoading = false;
+      });
     }
   }
 
@@ -57,49 +114,34 @@ class _DescriptionsPageState extends State<DescriptionsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Location Description'),
+        title: Text("Location Description"),
         backgroundColor: Colors.teal,
       ),
-      body: FutureBuilder<String>(
-        future: _description,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError) {
-            return Center(child: Text('Error fetching description'));
-          }
-
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No description available'));
-          }
-
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Description of ${widget.locationId}',
-                    style: TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.teal[800],
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: SingleChildScrollView(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Description of $locationName',
+                      style: TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.teal[800],
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 16),
-                  Text(
-                    snapshot.data!,
-                    style: TextStyle(fontSize: 18),
-                  ),
-                ],
+                    SizedBox(height: 16),
+                    Text(
+                      description,
+                      style: TextStyle(fontSize: 16, color: Colors.black87),
+                    ),
+                  ],
+                ),
               ),
             ),
-          );
-        },
-      ),
     );
   }
 }
