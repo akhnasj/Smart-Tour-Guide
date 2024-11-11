@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'ratings_reviews.dart'; // Ensure you import the RatingsReviewsPage
 
 class LocationsDetailsPage extends StatefulWidget {
   final String locationId;
@@ -294,65 +295,51 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                     // Add Review Button (with white background)
                     ElevatedButton(
                       onPressed: () {
-                        // Your logic to show a review dialog or page
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => RatingsReviewsPage(
+                              locationId: widget.locationId,
+                              city: city,
+                            ),
+                          ),
+                        );
                       },
                       child: Text("Add a Rating and Review"),
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.teal,
                         backgroundColor: Colors.white,
                         side: BorderSide(
-                            color: Colors.teal,
-                            width: 2), // Border for the button
-                        // Button text color
+                          color: Colors.teal,
+                          width: 2,
+                        ),
                       ),
                     ),
                     SizedBox(height: 16),
-                    // Display reviews list
+                    // Display the list of reviews
                     FutureBuilder<List<DocumentSnapshot>>(
                       future: getReviews(),
-                      builder: (context, reviewsSnapshot) {
-                        if (reviewsSnapshot.connectionState ==
+                      builder: (context, reviewSnapshot) {
+                        if (reviewSnapshot.connectionState ==
                             ConnectionState.waiting) {
                           return Center(child: CircularProgressIndicator());
                         }
 
-                        if (reviewsSnapshot.hasError) {
-                          return Center(
-                            child: Text(
-                                'Error fetching reviews: ${reviewsSnapshot.error}'),
-                          );
+                        if (reviewSnapshot.data == null ||
+                            reviewSnapshot.data!.isEmpty) {
+                          return Center(child: Text("No reviews yet"));
                         }
 
-                        if (reviewsSnapshot.data?.isEmpty ?? true) {
-                          return Center(child: Text('No reviews yet'));
-                        }
+                        List<DocumentSnapshot> reviews = reviewSnapshot.data!;
 
                         return Column(
-                          children: reviewsSnapshot.data!.map((reviewDoc) {
-                            Map<String, dynamic> reviewData =
-                                reviewDoc.data() as Map<String, dynamic>;
-                            String reviewText = reviewData['Review'] ?? '';
-                            String ratingStr = reviewData['Rating'];
-                            String touristId = reviewData['t_id'];
-
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: reviews.map((review) {
                             return FutureBuilder<String>(
-                              future: getTouristName(touristId),
+                              future: getTouristName(review['t_id']),
                               builder: (context, touristSnapshot) {
-                                if (touristSnapshot.connectionState ==
-                                    ConnectionState.waiting) {
-                                  return ListTile(
-                                    title: CircularProgressIndicator(),
-                                  );
-                                }
-
-                                if (touristSnapshot.hasError) {
-                                  return ListTile(
-                                    title: Text('Error loading tourist info'),
-                                  );
-                                }
-
                                 String touristName =
-                                    touristSnapshot.data ?? 'Unknown Tourist';
+                                    touristSnapshot.data ?? 'Unknown';
 
                                 return Card(
                                   margin: EdgeInsets.symmetric(vertical: 8),
@@ -362,21 +349,25 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        // Tourist Name
                                         Text(
                                           touristName,
                                           style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold),
                                         ),
                                         SizedBox(height: 4),
-                                        // Rating as stars
+                                        Text(
+                                          review['Review'] ?? 'No review',
+                                          style: TextStyle(
+                                              fontSize: 14,
+                                              color: Colors.black54),
+                                        ),
+                                        SizedBox(height: 4),
                                         RatingBar.builder(
                                           initialRating:
-                                              double.parse(ratingStr),
+                                              double.parse(review['Rating']),
                                           minRating: 1,
-                                          itemSize: 15,
+                                          itemSize: 20,
                                           direction: Axis.horizontal,
                                           allowHalfRating: true,
                                           itemCount: 5,
@@ -385,12 +376,6 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                                             color: Colors.amber,
                                           ),
                                           onRatingUpdate: (rating) {},
-                                        ),
-                                        SizedBox(height: 4),
-                                        // Review Text
-                                        Text(
-                                          reviewText,
-                                          style: TextStyle(fontSize: 14),
                                         ),
                                       ],
                                     ),
