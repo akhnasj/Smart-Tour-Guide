@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'ratings_reviews.dart'; // Ensure you import the RatingsReviewsPage
+import 'add_reviews.dart'; // Ensure you import the RatingsReviewsPage
 
 class LocationsDetailsPage extends StatefulWidget {
   final String locationId;
@@ -298,7 +298,7 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => RatingsReviewsPage(
+                            builder: (context) => AddReviewsPage(
                               locationId: widget.locationId,
                               city: city,
                             ),
