@@ -291,7 +291,23 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                         color: Colors.teal,
                       ),
                     ),
-                    // Display reviews
+                    // Add Review Button (with white background)
+                    ElevatedButton(
+                      onPressed: () {
+                        // Your logic to show a review dialog or page
+                      },
+                      child: Text("Add a Rating and Review"),
+                      style: ElevatedButton.styleFrom(
+                        foregroundColor: Colors.teal,
+                        backgroundColor: Colors.white,
+                        side: BorderSide(
+                            color: Colors.teal,
+                            width: 2), // Border for the button
+                        // Button text color
+                      ),
+                    ),
+                    SizedBox(height: 16),
+                    // Display reviews list
                     FutureBuilder<List<DocumentSnapshot>>(
                       future: getReviews(),
                       builder: (context, reviewsSnapshot) {
@@ -300,42 +316,53 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                           return Center(child: CircularProgressIndicator());
                         }
 
-                        if (!reviewsSnapshot.hasData ||
-                            reviewsSnapshot.data!.isEmpty) {
-                          return Center(child: Text("No reviews yet"));
+                        if (reviewsSnapshot.hasError) {
+                          return Center(
+                            child: Text(
+                                'Error fetching reviews: ${reviewsSnapshot.error}'),
+                          );
                         }
 
-                        List<DocumentSnapshot> reviews = reviewsSnapshot.data!;
-                        return // Inside the ListView.builder that displays reviews
-                            ListView.builder(
-                          shrinkWrap: true,
-                          itemCount: reviews.length,
-                          itemBuilder: (context, index) {
-                            var review = reviews[index];
-                            String touristId = review['t_id'];
-                            String rating = review['Rating'];
-                            String reviewText =
-                                review['Review'] ?? 'No comment';
+                        if (reviewsSnapshot.data?.isEmpty ?? true) {
+                          return Center(child: Text('No reviews yet'));
+                        }
+
+                        return Column(
+                          children: reviewsSnapshot.data!.map((reviewDoc) {
+                            Map<String, dynamic> reviewData =
+                                reviewDoc.data() as Map<String, dynamic>;
+                            String reviewText = reviewData['Review'] ?? '';
+                            String ratingStr = reviewData['Rating'];
+                            String touristId = reviewData['t_id'];
 
                             return FutureBuilder<String>(
                               future: getTouristName(touristId),
-                              builder: (context, touristNameSnapshot) {
-                                if (touristNameSnapshot.connectionState ==
+                              builder: (context, touristSnapshot) {
+                                if (touristSnapshot.connectionState ==
                                     ConnectionState.waiting) {
-                                  return SizedBox();
+                                  return ListTile(
+                                    title: CircularProgressIndicator(),
+                                  );
                                 }
 
-                                String touristName = touristNameSnapshot.data!;
+                                if (touristSnapshot.hasError) {
+                                  return ListTile(
+                                    title: Text('Error loading tourist info'),
+                                  );
+                                }
+
+                                String touristName =
+                                    touristSnapshot.data ?? 'Unknown Tourist';
 
                                 return Card(
-                                  margin: EdgeInsets.symmetric(vertical: 8.0),
+                                  margin: EdgeInsets.symmetric(vertical: 8),
                                   child: Padding(
                                     padding: const EdgeInsets.all(8.0),
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        // Tourist name
+                                        // Tourist Name
                                         Text(
                                           touristName,
                                           style: TextStyle(
@@ -344,12 +371,12 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                                           ),
                                         ),
                                         SizedBox(height: 4),
-
                                         // Rating as stars
                                         RatingBar.builder(
-                                          initialRating: double.parse(rating),
+                                          initialRating:
+                                              double.parse(ratingStr),
                                           minRating: 1,
-                                          itemSize: 15, // Small size for stars
+                                          itemSize: 15,
                                           direction: Axis.horizontal,
                                           allowHalfRating: true,
                                           itemCount: 5,
@@ -359,9 +386,8 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                                           ),
                                           onRatingUpdate: (rating) {},
                                         ),
-                                        SizedBox(height: 8),
-
-                                        // Review text
+                                        SizedBox(height: 4),
+                                        // Review Text
                                         Text(
                                           reviewText,
                                           style: TextStyle(fontSize: 14),
@@ -372,7 +398,7 @@ class _LocationsDetailsPageState extends State<LocationsDetailsPage> {
                                 );
                               },
                             );
-                          },
+                          }).toList(),
                         );
                       },
                     ),
