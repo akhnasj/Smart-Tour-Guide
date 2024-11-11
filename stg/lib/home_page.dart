@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'explore.dart';
 import 'favourites.dart';
-import 'profile.dart';
+//import 'profile.dart';
+import 'peoples.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -13,7 +14,7 @@ class _HomePageState extends State<HomePage> {
   static List<Widget> _pages = [
     ExplorePage(),
     FavouritesPage(),
-    ProfilePage(),
+    PeoplesPage(),
   ];
 
   void _onItemTapped(int index) {
@@ -38,7 +39,7 @@ class _HomePageState extends State<HomePage> {
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
-            label: 'Profile',
+            label: 'Peoples',
           ),
         ],
         currentIndex: _selectedIndex,
