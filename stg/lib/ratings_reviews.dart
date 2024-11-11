@@ -96,8 +96,12 @@ class _RatingsReviewsPageState extends State<RatingsReviewsPage> {
               direction: Axis.horizontal,
               allowHalfRating: true,
               itemCount: 5,
-              itemBuilder: (context, _) =>
-                  Icon(Icons.star, color: Colors.amber),
+              itemBuilder: (context, index) => Icon(
+                Icons.star,
+                color: index < _rating
+                    ? Colors.orange
+                    : Colors.grey, // Highlight stars
+              ),
               onRatingUpdate: (rating) {
                 setState(() {
                   _rating = rating;
@@ -118,19 +122,22 @@ class _RatingsReviewsPageState extends State<RatingsReviewsPage> {
               controller: _reviewController,
               maxLines: 4,
               decoration: InputDecoration(
-                hintText: "Write your review here...",
+                hintText: "Write your review here...", // Hint text not bold
+                hintStyle: TextStyle(color: Colors.grey), // Lighter hint text
                 border: OutlineInputBorder(),
               ),
             ),
             SizedBox(height: 20),
-            // Submit button
+            // Submit button (white background)
             _isSubmitting
                 ? Center(child: CircularProgressIndicator())
                 : ElevatedButton(
                     onPressed: submitReview,
                     child: Text("Submit Review"),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.teal, // Button color
+                      backgroundColor: Colors.white, // White button
+                      foregroundColor: Colors.teal, // Text color
+                      side: BorderSide(color: Colors.teal, width: 2), // Border
                     ),
                   ),
           ],
