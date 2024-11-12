@@ -5,7 +5,7 @@ import 'dart:convert';
 class WeatherPage extends StatefulWidget {
   final String city;
 
-  WeatherPage({required this.city});
+  WeatherPage({required this.city, required String locationId});
 
   @override
   _WeatherPageState createState() => _WeatherPageState();
