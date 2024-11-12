@@ -18,6 +18,31 @@ class ChatPage extends StatefulWidget {
 
 class _ChatPageState extends State<ChatPage> {
   TextEditingController messageController = TextEditingController();
+  String otherUserName = "Chat";
+
+  @override
+  void initState() {
+    super.initState();
+    fetchOtherUserName();
+  }
+
+  // Fetch the first name of the other user (tourist)
+  Future<void> fetchOtherUserName() async {
+    try {
+      DocumentSnapshot userSnapshot = await FirebaseFirestore.instance
+          .collection('tourist')
+          .doc(widget.otherUserId)
+          .get();
+
+      if (userSnapshot.exists) {
+        setState(() {
+          otherUserName = userSnapshot['firstName'] ?? "Chat";
+        });
+      }
+    } catch (e) {
+      print("Error fetching user name: $e");
+    }
+  }
 
   // Fetch messages for the chat room
   Stream<QuerySnapshot> getMessages() {
@@ -51,7 +76,7 @@ class _ChatPageState extends State<ChatPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Chat with ${widget.otherUserId}"),
+        title: Text("Chat with $otherUserName"),
         backgroundColor: Colors.teal,
       ),
       body: Column(
