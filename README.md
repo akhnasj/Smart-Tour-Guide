@@ -34,10 +34,15 @@ The existing system of guided tourism primarily relies on human tour guides who 
 4.	**Expensive**: Hiring a guide can significantly increase the cost of a trip, especially if guides charge high fees for their services. This added expense can strain your travel budget and reduce the funds available for other experiences or necessities.
 ### 2.2	 Proposed System
 The proposed system will allow users to search for attractions in cities using customizable filters, such as activity type or interest, and display relevant results to enhance personalized travel experiences. Additionally, it will facilitate travel partner matching by enabling users to connect with like-minded individuals, while providing detailed attraction information, including maps, weather, ratings, reviews, and notifications for a comprehensive, interactive platform.\
-•	**Tourist Module**: Enables tourists to search for attractions by city and category, view descriptions, and get personalized recommendations.\
-•	**Travel Partner Module**: Allows users to create profiles and connect with compatible travel partners.\
-•	**Attraction Management Module**: Gives administrators tools to manage and update attraction details, images, and categories.\
-•	**Rating and Review Module**: Lets tourists rate, review, and upload photos, fostering a community-driven feedback system.\
+
+•	**Tourist Module**: Enables tourists to search for attractions by city and category, view descriptions, and get personalized recommendations.
+
+•	**Travel Partner Module**: Allows users to create profiles and connect with compatible travel partners.
+
+•	**Attraction Management Module**: Gives administrators tools to manage and update attraction details, images, and categories.
+
+•	**Rating and Review Module**: Lets tourists rate, review, and upload photos, fostering a community-driven feedback system.
+
 Together, these modules will create a seamless, customer-centric platform that improves scheduling flexibility, task assignment efficiency, and communication across the entire service process.
 #### 2.2.1 Advantages of Proposed System
 •  **User-Defined Filters**:
