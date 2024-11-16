@@ -33,18 +33,21 @@ The existing system of guided tourism primarily relies on human tour guides who 
 3.	**Convenience**: Relying on a physical guide can be inconvenient, as it requires coordination of meeting times and locations, which might not always align with your travel preferences. Moreover, having to follow the guide’s pace can limit your flexibility to explore places in your own time.
 4.	**Expensive**: Hiring a guide can significantly increase the cost of a trip, especially if guides charge high fees for their services. This added expense can strain your travel budget and reduce the funds available for other experiences or necessities.
 ### 2.2	 Proposed System
-The proposed system will allow users to search for attractions in cities using customizable filters, such as activity type or interest, and display relevant results to enhance personalized travel experiences. Additionally, it will facilitate travel partner matching by enabling users to connect with like-minded individuals, while providing detailed attraction information, including maps, weather, ratings, reviews, and notifications for a comprehensive, interactive platform.
-•	**Tourist Module**: Enables tourists to search for attractions by city and category, view descriptions, and get personalized recommendations.
-•	**Travel Partner Module**: Allows users to create profiles and connect with compatible travel partners.
-•	**Attraction Management Module**: Gives administrators tools to manage and update attraction details, images, and categories.
-•	**Rating and Review Module**: Lets tourists rate, review, and upload photos, fostering a community-driven feedback system.
+The proposed system will allow users to search for attractions in cities using customizable filters, such as activity type or interest, and display relevant results to enhance personalized travel experiences. Additionally, it will facilitate travel partner matching by enabling users to connect with like-minded individuals, while providing detailed attraction information, including maps, weather, ratings, reviews, and notifications for a comprehensive, interactive platform.\
+•	**Tourist Module**: Enables tourists to search for attractions by city and category, view descriptions, and get personalized recommendations.\
+•	**Travel Partner Module**: Allows users to create profiles and connect with compatible travel partners.\
+•	**Attraction Management Module**: Gives administrators tools to manage and update attraction details, images, and categories.\
+•	**Rating and Review Module**: Lets tourists rate, review, and upload photos, fostering a community-driven feedback system.\
 Together, these modules will create a seamless, customer-centric platform that improves scheduling flexibility, task assignment efficiency, and communication across the entire service process.
 #### 2.2.1 Advantages of Proposed System
 •  **User-Defined Filters**:
 The platform allows users to search by city and choose from categories such as adventure, historical sites, and family-friendly spots, providing tailored recommendations to match each user’s travel preferences and interests.
+
 •  **Travel Partner Matching**:
 In addition to recommending attractions, the app enables users to connect with compatible travel companions by creating profiles and finding others with similar interests, making travel more social and enjoyable.
+
 •  **Attraction Descriptions**:
 The platform provides users with detailed descriptions of attractions, including maps and real-time weather conditions, allowing them to plan their visits with all necessary information at their fingertips.
+
 •  **Favourites, Ratings, Reviews, and Messaging System**:
 Users can save favourite attractions, rate and review sites, upload pictures, and communicate with other users, creating a community-focused experience that helps travelers make informed choices and share insights.
